@@ -1,11 +1,13 @@
 import { Navbar } from "./navbar";
 import { Sidebar } from "./sidebar";
+import { protectServer } from "@/features/auth/utils";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 };
 
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+const DashboardLayout = async ({ children }: DashboardLayoutProps) => {
+  await protectServer();
   return ( 
     <div className="bg-[var(--bg)] h-full text-foreground">
       <Sidebar />

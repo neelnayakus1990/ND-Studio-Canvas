@@ -55,10 +55,14 @@ const app = new Hono()
     const active = checkIsActive(subscription);
 
     return c.json({
-      data: {
-        ...subscription,
-        active,
-      },
+      data: subscription
+        ? {
+            ...subscription,
+            active,
+          }
+        : {
+            active,
+          },
     });
   })
   .post("/checkout", verifyAuth(), async (c) => {

@@ -1,11 +1,64 @@
 import { z } from "zod";
 import { Hono } from "hono";
-import { eq, and, desc, asc } from "drizzle-orm";
+import { eq, and, desc, asc, count, or, isNull } from "drizzle-orm";
 import { verifyAuth } from "@hono/auth-js";
 import { zValidator } from "@hono/zod-validator";
 
 import { db } from "@/db/drizzle";
-import { projects, projectsInsertSchema } from "@/db/schema";
+import { projects, projectsInsertSchema, subscriptions } from "@/db/schema";
+import { checkIsActive } from "@/features/subscriptions/lib";
+import { FREE_PROJECT_LIMIT, FREE_TEMPLATE_LIMIT } from "@/lib/free-tier";
+
+const getIsPro = async (userId: string) => {
+  const [subscription] = await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.userId, userId));
+
+  return checkIsActive(subscription);
+};
+
+const canCreateProject = async (userId: string) => {
+  const isPro = await getIsPro(userId);
+
+  if (isPro) {
+    return true;
+  }
+
+  const [{ count: projectCount }] = await db
+    .select({ count: count() })
+    .from(projects)
+    .where(
+      and(
+        eq(projects.userId, userId),
+        or(eq(projects.isTemplate, false), isNull(projects.isTemplate))
+      )
+    );
+
+  return Number(projectCount) < FREE_PROJECT_LIMIT;
+};
+
+const canCreateTemplate = async (userId: string) => {
+  const isPro = await getIsPro(userId);
+
+  if (isPro) {
+    return true;
+  }
+
+  const baseQuery = db
+    .select({ count: count() })
+    .from(projects)
+    .where(
+      and(
+        eq(projects.userId, userId),
+        eq(projects.isTemplate, true)
+      )
+    );
+
+  const [{ count: templateCount }] = await baseQuery;
+
+  return Number(templateCount) < FREE_TEMPLATE_LIMIT;
+};
 
 const app = new Hono()
   .get(
@@ -76,6 +129,12 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
+      const canCreate = await canCreateProject(auth.token.id);
+
+      if (!canCreate) {
+        return c.json({ error: "Free project limit reached" }, 402);
+      }
+
       const data = await db
         .select()
         .from(projects)
@@ -121,6 +180,12 @@ const app = new Hono()
 
       if (!auth.token?.id) {
         return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const canCreate = await canCreateProject(auth.token.id);
+
+      if (!canCreate) {
+        return c.json({ error: "Free project limit reached" }, 402);
       }
 
       const data = await db
@@ -217,6 +282,30 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
+      if (values.isTemplate === true) {
+        const [current] = await db
+          .select()
+          .from(projects)
+          .where(
+            and(
+              eq(projects.id, id),
+              eq(projects.userId, auth.token.id)
+            )
+          );
+
+        if (!current) {
+          return c.json({ error: "Not found" }, 404);
+        }
+
+        if (!current.isTemplate) {
+          const canCreate = await canCreateTemplate(auth.token.id);
+
+          if (!canCreate) {
+            return c.json({ error: "Free template limit reached" }, 402);
+          }
+        }
+      }
+
       const data = await db
         .update(projects)
         .set({
@@ -285,6 +374,12 @@ const app = new Hono()
 
       if (!auth.token?.id) {
         return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const canCreate = await canCreateProject(auth.token.id);
+
+      if (!canCreate) {
+        return c.json({ error: "Free project limit reached" }, 402);
       }
 
       const data = await db

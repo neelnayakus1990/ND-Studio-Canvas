@@ -88,7 +88,14 @@ export const Editor = ({ initialData }: EditorProps) => {
 
   const onToggleTemplate = useCallback((value: boolean) => {
     setIsTemplate(value);
-    mutate({ isTemplate: value });
+    mutate(
+      { isTemplate: value },
+      {
+        onError: () => {
+          setIsTemplate(!value);
+        },
+      }
+    );
   }, [mutate]);
 
   const canvasRef = useRef(null);
