@@ -40,7 +40,10 @@ export const UserButton = () => {
     return null;
   }
 
-  const name = session.data?.user?.name!;
+  const name =
+    session.data?.user?.name ||
+    session.data?.user?.email ||
+    "User";
   const imageUrl = session.data?.user?.image;
 
   return (
