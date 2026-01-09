@@ -7,6 +7,8 @@ import {
   text,
   primaryKey,
   integer,
+  jsonb,
+  pgEnum,
 } from "drizzle-orm/pg-core"
 import type { AdapterAccountType } from "next-auth/adapters"
  
@@ -138,3 +140,59 @@ export const subscriptions = pgTable("subscription", {
   createdAt: timestamp("createdAt", { mode: "date" }).notNull(),
   updatedAt: timestamp("updatedAt", { mode: "date" }).notNull(),
 });
+
+export const assetTypeEnum = pgEnum("asset_type", [
+  "image",
+  "icon",
+  "svg",
+]);
+
+export const assets = pgTable("asset", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, {
+      onDelete: "cascade",
+    }),
+  type: assetTypeEnum("type").notNull(),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  tags: text("tags").array().notNull(),
+  isBuiltin: boolean("isBuiltin").notNull().default(false),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull(),
+});
+
+export const assetsRelations = relations(assets, ({ one }) => ({
+  user: one(users, {
+    fields: [assets.userId],
+    references: [users.id],
+  }),
+}));
+
+export const brandKits = pgTable("brand_kit", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, {
+      onDelete: "cascade",
+    }),
+  name: text("name").notNull(),
+  colors: jsonb("colors").notNull(),
+  fonts: jsonb("fonts").notNull(),
+  logos: jsonb("logos").notNull(),
+  watermarkUrl: text("watermarkUrl"),
+  handles: jsonb("handles").notNull(),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).notNull(),
+});
+
+export const brandKitsRelations = relations(brandKits, ({ one }) => ({
+  user: one(users, {
+    fields: [brandKits.userId],
+    references: [users.id],
+  }),
+}));

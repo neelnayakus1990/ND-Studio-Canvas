@@ -10,6 +10,7 @@ import { ToolSidebarClose } from "@/features/editor/components/tool-sidebar-clos
 import { ToolSidebarHeader } from "@/features/editor/components/tool-sidebar-header";
 
 import { useGetImages } from "@/features/images/api/use-get-images";
+import { useCreateAsset } from "@/features/assets/api/use-create-asset";
 
 import { cn } from "@/lib/utils";
 import { UploadButton } from "@/lib/uploadthing";
@@ -27,6 +28,7 @@ export const ImageSidebar = ({
   onChangeActiveTool,
 }: ImageSidebarProps) => {
   const { data, isLoading, isError } = useGetImages();
+  const createAsset = useCreateAsset();
 
   const onClose = () => {
     onChangeActiveTool("select");
@@ -35,7 +37,7 @@ export const ImageSidebar = ({
   return (
     <aside
       className={cn(
-        "bg-white relative border-r z-[40] w-[360px] h-full flex flex-col",
+        "bg-[var(--panel1)] relative border-r border-[var(--stroke)] z-[40] w-[360px] h-full flex flex-col",
         activeTool === "images" ? "visible" : "hidden",
       )}
     >
@@ -54,7 +56,19 @@ export const ImageSidebar = ({
           }}
           endpoint="imageUploader"
           onClientUploadComplete={(res) => {
-            editor?.addImage(res[0].url);
+            const url = res[0]?.url;
+
+            if (!url) {
+              return;
+            }
+
+            editor?.addImage(url);
+            createAsset.mutate({
+              name: "Uploaded Image",
+              url,
+              type: "image",
+              tags: [],
+            });
           }}
         />
       </div>
@@ -79,7 +93,7 @@ export const ImageSidebar = ({
                 <button
                   onClick={() => editor?.addImage(image.urls.regular)}
                   key={image.id}
-                  className="relative w-full h-[100px] group hover:opacity-75 transition bg-muted rounded-sm overflow-hidden border"
+                  className="relative w-full h-[100px] group hover:opacity-75 transition bg-[var(--panel2)] rounded-sm overflow-hidden border border-[var(--stroke)]"
                 >
                   <Image
                     fill

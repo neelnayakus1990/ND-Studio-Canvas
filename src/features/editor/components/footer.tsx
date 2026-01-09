@@ -11,7 +11,7 @@ interface FooterProps {
 
 export const Footer = ({ editor }: FooterProps) => {
   return (
-    <footer className="h-[52px] border-t bg-white w-full flex items-center overflow-x-auto z-[49] p-2 gap-x-1 shrink-0 px-4 flex-row-reverse">
+    <footer className="h-[52px] border-t border-[var(--stroke)] bg-[var(--panel1)] w-full flex items-center overflow-x-auto z-[49] p-2 gap-x-2 shrink-0 px-4 flex-row-reverse">
       <Hint label="Reset" side="top" sideOffset={10}>
         <Button
           onClick={() => editor?.autoZoom()}
@@ -22,6 +22,17 @@ export const Footer = ({ editor }: FooterProps) => {
           <Minimize className="size-4" />
         </Button>
       </Hint>
+      <div className="w-[160px]">
+        <input
+          type="range"
+          min={0.2}
+          max={1}
+          step={0.05}
+          value={editor?.getZoom() || 1}
+          onChange={(e) => editor?.setZoom(parseFloat(e.target.value))}
+          className="w-full"
+        />
+      </div>
       <Hint label="Zoom in" side="top" sideOffset={10}>
         <Button
           onClick={() => editor?.zoomIn()}

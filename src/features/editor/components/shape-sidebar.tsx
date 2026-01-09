@@ -1,6 +1,7 @@
 import { IoTriangle } from "react-icons/io5";
 import { FaDiamond } from "react-icons/fa6";
 import { FaCircle, FaSquare, FaSquareFull } from "react-icons/fa";
+import { ArrowRight, Minus } from "lucide-react";
 
 import { ActiveTool, Editor } from "@/features/editor/types";
 import { ShapeTool } from "@/features/editor/components/shape-tool";
@@ -28,7 +29,7 @@ export const ShapeSidebar = ({
   return (
     <aside
       className={cn(
-        "bg-white relative border-r z-[40] w-[360px] h-full flex flex-col",
+        "bg-[var(--panel1)] relative border-r border-[var(--stroke)] z-[40] w-[360px] h-full flex flex-col",
         activeTool === "shapes" ? "visible" : "hidden",
       )}
     >
@@ -62,6 +63,14 @@ export const ShapeSidebar = ({
           <ShapeTool
             onClick={() => editor?.addDiamond()}
             icon={FaDiamond}
+          />
+          <ShapeTool
+            onClick={() => editor?.addLine()}
+            icon={Minus}
+          />
+          <ShapeTool
+            onClick={() => editor?.addArrow()}
+            icon={ArrowRight}
           />
         </div>
       </ScrollArea>

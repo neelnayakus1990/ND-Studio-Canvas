@@ -17,7 +17,7 @@ export const ShapeTool = ({
   return (
     <button
       onClick={onClick}
-      className="aspect-square border rounded-md p-5"
+      className="aspect-square border border-[var(--stroke)] rounded-md p-5 text-[var(--gold)] hover:bg-[var(--panel2)] transition"
     >
       <Icon className={cn("h-full w-full", iconClassName)} />
     </button>

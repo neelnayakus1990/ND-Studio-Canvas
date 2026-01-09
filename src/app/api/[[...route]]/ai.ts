@@ -4,6 +4,9 @@ import { verifyAuth } from "@hono/auth-js";
 import { zValidator } from "@hono/zod-validator";
 
 import { replicate } from "@/lib/replicate";
+import { validateServerEnv } from "@/lib/env";
+
+validateServerEnv({ ai: true });
 
 const app = new Hono()
   .post(

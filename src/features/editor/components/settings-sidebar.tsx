@@ -6,6 +6,7 @@ import { ToolSidebarHeader } from "@/features/editor/components/tool-sidebar-hea
 import { ColorPicker } from "@/features/editor/components/color-picker";
 
 import { cn } from "@/lib/utils";
+import { UploadButton } from "@/lib/uploadthing";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,7 @@ export const SettingsSidebar = ({
   return (
     <aside
       className={cn(
-        "bg-white relative border-r z-[40] w-[360px] h-full flex flex-col",
+        "bg-[var(--panel1)] relative border-r border-[var(--stroke)] z-[40] w-[360px] h-full flex flex-col",
         activeTool === "settings" ? "visible" : "hidden",
       )}
     >
@@ -85,6 +86,7 @@ export const SettingsSidebar = ({
               value={height}
               type="number"
               onChange={(e) => changeHeight(e.target.value)}
+              className="bg-transparent border-[var(--stroke)]"
             />
           </div>
           <div className="space-y-2">
@@ -96,9 +98,10 @@ export const SettingsSidebar = ({
               value={width}
               type="number"
               onChange={(e) => changeWidth(e.target.value)}
+              className="bg-transparent border-[var(--stroke)]"
             />
           </div>
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full bg-[var(--gold)] text-black hover:opacity-90">
             Resize
           </Button>
         </form>
@@ -106,6 +109,26 @@ export const SettingsSidebar = ({
           <ColorPicker
             value={background as string} // We dont support gradients or patterns
             onChange={changeBackground}
+          />
+        </div>
+        <div className="p-4 pt-0">
+          <Label className="mb-2 block">Background image</Label>
+          <UploadButton
+            appearance={{
+              button: "w-full text-sm font-medium",
+              allowedContent: "hidden"
+            }}
+            content={{
+              button: "Upload background"
+            }}
+            endpoint="imageUploader"
+            onClientUploadComplete={(res) => {
+              const url = res[0]?.url;
+              if (!url) {
+                return;
+              }
+              editor?.setBackgroundImage(url);
+            }}
           />
         </div>
       </ScrollArea>

@@ -1,0 +1,7 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="600" fill="#121214"/>
+  <rect x="120" y="120" width="560" height="360" rx="28" stroke="#E6C27A" stroke-width="4" fill="#0C0C0D"/>
+  <text x="400" y="320" font-family="Inter, Arial, sans-serif" font-size="24" fill="#A9A9B2" text-anchor="middle">
+    Template Preview
+  </text>
+</svg>

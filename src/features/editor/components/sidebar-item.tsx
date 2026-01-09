@@ -21,8 +21,8 @@ export const SidebarItem = ({
       variant="ghost"
       onClick={onClick}
       className={cn(
-        "w-full h-full aspect-video p-3 py-4 flex flex-col rounded-none",
-        isActive && "bg-muted text-primary"
+        "w-full h-full aspect-video p-3 py-4 flex flex-col rounded-none text-[var(--muted-text)] hover:text-foreground",
+        isActive && "bg-[var(--panel1)] text-[var(--gold)]"
       )}
     >
       <Icon className="size-5 stroke-2 shrink-0" />

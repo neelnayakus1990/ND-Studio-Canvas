@@ -4,7 +4,9 @@ import {
   CreditCard, 
   Crown, 
   Home, 
-  MessageCircleQuestion
+  MessageCircleQuestion,
+  Palette,
+  LayoutTemplate
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
@@ -41,11 +43,11 @@ export const SidebarRoutes = () => {
             <Button
               onClick={() => mutation.mutate()}
               disabled={mutation.isPending}
-              className="w-full rounded-xl border-none hover:bg-white hover:opacity-75 transition"
+              className="w-full rounded-xl border border-[var(--stroke)] bg-[var(--panel2)] hover:opacity-75 transition"
               variant="outline"
               size="lg"
             >
-              <Crown className="mr-2 size-4 fill-yellow-500 text-yellow-500" />
+              <Crown className="mr-2 size-4 fill-[var(--gold)] text-[var(--gold)]" />
               Upgrade to Image AI Pro
             </Button>
           </div>
@@ -60,6 +62,18 @@ export const SidebarRoutes = () => {
           icon={Home}
           label="Home"
           isActive={pathname === "/"}
+        />
+        <SidebarItem
+          href="/templates"
+          icon={LayoutTemplate}
+          label="Templates"
+          isActive={pathname === "/templates"}
+        />
+        <SidebarItem
+          href="/brand-kit"
+          icon={Palette}
+          label="Brand Kit"
+          isActive={pathname === "/brand-kit"}
         />
       </ul>
       <div className="px-3">

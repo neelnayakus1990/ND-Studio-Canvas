@@ -16,6 +16,7 @@ import { Footer } from "@/features/editor/components/footer";
 import { useEditor } from "@/features/editor/hooks/use-editor";
 import { Sidebar } from "@/features/editor/components/sidebar";
 import { Toolbar } from "@/features/editor/components/toolbar";
+import { AssetsSidebar } from "@/features/editor/components/assets-sidebar";
 import { ShapeSidebar } from "@/features/editor/components/shape-sidebar";
 import { FillColorSidebar } from "@/features/editor/components/fill-color-sidebar";
 import { StrokeColorSidebar } from "@/features/editor/components/stroke-color-sidebar";
@@ -30,6 +31,7 @@ import { AiSidebar } from "@/features/editor/components/ai-sidebar";
 import { TemplateSidebar } from "@/features/editor/components/template-sidebar";
 import { RemoveBgSidebar } from "@/features/editor/components/remove-bg-sidebar";
 import { SettingsSidebar } from "@/features/editor/components/settings-sidebar";
+import { BrandKitSidebar } from "@/features/editor/components/brand-kit-sidebar";
 
 interface EditorProps {
   initialData: ResponseType["data"];
@@ -37,6 +39,7 @@ interface EditorProps {
 
 export const Editor = ({ initialData }: EditorProps) => {
   const { mutate } = useUpdateProject(initialData.id);
+  const [isTemplate, setIsTemplate] = useState(!!initialData.isTemplate);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSave = useCallback(
@@ -83,6 +86,11 @@ export const Editor = ({ initialData }: EditorProps) => {
     setActiveTool(tool);
   }, [activeTool, editor]);
 
+  const onToggleTemplate = useCallback((value: boolean) => {
+    setIsTemplate(value);
+    mutate({ isTemplate: value });
+  }, [mutate]);
+
   const canvasRef = useRef(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -109,9 +117,16 @@ export const Editor = ({ initialData }: EditorProps) => {
         editor={editor}
         activeTool={activeTool}
         onChangeActiveTool={onChangeActiveTool}
+        isTemplate={isTemplate}
+        onToggleTemplate={onToggleTemplate}
       />
       <div className="absolute h-[calc(100%-68px)] w-full top-[68px] flex">
         <Sidebar
+          activeTool={activeTool}
+          onChangeActiveTool={onChangeActiveTool}
+        />
+        <AssetsSidebar
+          editor={editor}
           activeTool={activeTool}
           onChangeActiveTool={onChangeActiveTool}
         />
@@ -155,6 +170,11 @@ export const Editor = ({ initialData }: EditorProps) => {
           activeTool={activeTool}
           onChangeActiveTool={onChangeActiveTool}
         />
+        <BrandKitSidebar
+          editor={editor}
+          activeTool={activeTool}
+          onChangeActiveTool={onChangeActiveTool}
+        />
         <TemplateSidebar
           editor={editor}
           activeTool={activeTool}
@@ -185,14 +205,14 @@ export const Editor = ({ initialData }: EditorProps) => {
           activeTool={activeTool}
           onChangeActiveTool={onChangeActiveTool}
         />
-        <main className="bg-muted flex-1 overflow-auto relative flex flex-col">
+        <main className="bg-[var(--bg)] flex-1 overflow-auto relative flex flex-col">
           <Toolbar
             editor={editor}
             activeTool={activeTool}
             onChangeActiveTool={onChangeActiveTool}
             key={JSON.stringify(editor?.canvas.getActiveObject())}
           />
-          <div className="flex-1 h-[calc(100%-124px)] bg-muted" ref={containerRef}>
+          <div className="flex-1 h-[calc(100%-124px)] bg-[var(--bg)]" ref={containerRef}>
             <canvas ref={canvasRef} />
           </div>
           <Footer editor={editor} />

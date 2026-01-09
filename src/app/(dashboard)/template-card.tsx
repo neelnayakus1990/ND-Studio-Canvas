@@ -35,7 +35,7 @@ export const TemplateCard = ({
     >
       <div
       style={{ aspectRatio: `${width}/${height}` }}
-      className="relative rounded-xl h-full w-full overflow-hidden border">
+      className="relative rounded-xl h-full w-full overflow-hidden border border-[var(--stroke)] bg-[var(--panel2)]">
         <Image
           fill
           src={imageSrc}
@@ -44,7 +44,7 @@ export const TemplateCard = ({
         />
         {isPro && (
           <div className="absolute top-2 right-2 h-10 w-10 flex items-center justify-center bg-black/50 rounded-full -z[10]">
-            <Crown className="size-5 fill-yellow-500 text-yellow-500" />
+            <Crown className="size-5 fill-[var(--gold)] text-[var(--gold)]" />
           </div>
         )}
         <div className="opacity-0 group-hover:opacity-100 transition absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl backdrop-filter backdrop-blur-sm">
@@ -57,7 +57,7 @@ export const TemplateCard = ({
         <p className="text-sm font-medium">
           {title}
         </p>
-        <p className="text-xs text-muted-foreground opacity-0 group-hover:opacity-75 transition">
+        <p className="text-xs text-[var(--muted-text)] opacity-0 group-hover:opacity-75 transition">
           {description}
         </p>
       </div>

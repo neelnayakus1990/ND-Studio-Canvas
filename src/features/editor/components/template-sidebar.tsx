@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { AlertTriangle, Loader, Crown } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { usePaywall } from "@/features/subscriptions/hooks/use-paywall";
 
@@ -11,6 +12,7 @@ import { ToolSidebarClose } from "@/features/editor/components/tool-sidebar-clos
 import { ToolSidebarHeader } from "@/features/editor/components/tool-sidebar-header";
 
 import { ResponseType, useGetTemplates } from "@/features/projects/api/use-get-templates";
+import { useUseTemplate } from "@/features/projects/api/use-use-template";
 
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -27,7 +29,9 @@ export const TemplateSidebar = ({
   activeTool,
   onChangeActiveTool,
 }: TemplateSidebarProps) => {
+  const router = useRouter();
   const { shouldBlock, triggerPaywall } = usePaywall();
+  const useTemplate = useUseTemplate();
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Are you sure?",
@@ -52,14 +56,21 @@ export const TemplateSidebar = ({
     const ok = await confirm();
 
     if (ok) {
-      editor?.loadJson(template.json);
+      useTemplate.mutate(
+        { id: template.id },
+        {
+          onSuccess: ({ data }) => {
+            router.push(`/editor/${data.id}`);
+          },
+        }
+      );
     }
   };
 
   return (
     <aside
       className={cn(
-        "bg-white relative border-r z-[40] w-[360px] h-full flex flex-col",
+        "bg-[var(--panel1)] relative border-r border-[var(--stroke)] z-[40] w-[360px] h-full flex flex-col",
         activeTool === "templates" ? "visible" : "hidden",
       )}
     >
@@ -92,11 +103,11 @@ export const TemplateSidebar = ({
                   }}
                   onClick={() => onClick(template)}
                   key={template.id}
-                  className="relative w-full group hover:opacity-75 transition bg-muted rounded-sm overflow-hidden border"
+                  className="relative w-full group hover:opacity-75 transition bg-[var(--panel2)] rounded-sm overflow-hidden border border-[var(--stroke)]"
                 >
                   <Image
                     fill
-                    src={template.thumbnailUrl || ""}
+                    src={template.thumbnailUrl || "/placeholder.svg"}
                     alt={template.name || "Template"}
                     className="object-cover"
                   />

@@ -52,13 +52,13 @@ export const UserButton = () => {
         {!shouldBlock && !isLoading && (
           <div className="absolute -top-1 -left-1 z-10 flex items-center justify-center">
             <div className="rounded-full bg-white flex items-center justify-center p-1 drop-shadow-sm">
-              <Crown className="size-3 text-yellow-500 fill-yellow-500" />
+              <Crown className="size-3 text-[var(--gold)] fill-[var(--gold)]" />
             </div>
           </div>
         )}
         <Avatar className="size-10 hover:opcaity-75 transition">
           <AvatarImage alt={name} src={imageUrl || ""} />
-          <AvatarFallback className="bg-blue-500 font-medium text-white flex items-center justify-center">
+          <AvatarFallback className="bg-[var(--gold)] font-medium text-black flex items-center justify-center">
             {name.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>

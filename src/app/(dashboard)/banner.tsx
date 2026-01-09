@@ -28,10 +28,10 @@ export const Banner = () => {
   };
 
   return (
-    <div className="text-white aspect-[5/1] min-h-[248px] flex gap-x-6 p-6 items-center rounded-xl bg-gradient-to-r from-[#2e62cb] via-[#0073ff] to-[#3faff5]">
-      <div className="rounded-full size-28 items-center justify-center bg-white/50 hidden md:flex">
-        <div className="rounded-full size-20 flex items-center justify-center bg-white">
-          <Sparkles className="h-20 text-[#0073ff] fill-[#0073ff]" />
+    <div className="text-foreground aspect-[5/1] min-h-[248px] flex gap-x-6 p-6 items-center rounded-[var(--r2)] bg-[var(--panel2)] border border-[var(--stroke)]">
+      <div className="rounded-full size-28 items-center justify-center bg-[var(--panel1)] border border-[var(--stroke)] hidden md:flex">
+        <div className="rounded-full size-20 flex items-center justify-center bg-[var(--panel2)]">
+          <Sparkles className="h-16 text-[var(--gold)] fill-[var(--gold)]" />
         </div>
       </div>
       <div className="flex flex-col gap-y-2">
@@ -44,8 +44,7 @@ export const Banner = () => {
         <Button
           disabled={mutation.isPending}
           onClick={onClick}
-          variant="secondary"
-          className="w-[160px]"
+          className="w-[180px] bg-[var(--grad-gold)] text-black hover:opacity-90"
         >
           Start creating
           <ArrowRight className="size-4 ml-2" />

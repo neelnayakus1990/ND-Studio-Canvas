@@ -8,6 +8,9 @@ import { checkIsActive } from "@/features/subscriptions/lib";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/db/drizzle";
 import { subscriptions } from "@/db/schema";
+import { validateServerEnv } from "@/lib/env";
+
+validateServerEnv({ billing: true });
 
 const app = new Hono()
   .post("/billing", verifyAuth(), async (c) => {

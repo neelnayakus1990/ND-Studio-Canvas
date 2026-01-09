@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { CiFileOn } from "react-icons/ci";
 import { BsCloudCheck, BsCloudSlash } from "react-icons/bs";
 import { useFilePicker } from "use-file-picker";
@@ -7,6 +8,7 @@ import { useMutationState } from "@tanstack/react-query";
 import { 
   ChevronDown, 
   Download, 
+  Check,
   Loader, 
   MousePointerClick, 
   Redo2, 
@@ -17,6 +19,7 @@ import { UserButton } from "@/features/auth/components/user-button";
 
 import { ActiveTool, Editor } from "@/features/editor/types";
 import { Logo } from "@/features/editor/components/logo";
+import { ExportModal } from "@/features/editor/components/export-modal";
 
 import { cn } from "@/lib/utils";
 import { Hint } from "@/components/hint";
@@ -34,6 +37,8 @@ interface NavbarProps {
   editor: Editor | undefined;
   activeTool: ActiveTool;
   onChangeActiveTool: (tool: ActiveTool) => void;
+  isTemplate: boolean;
+  onToggleTemplate: (value: boolean) => void;
 };
 
 export const Navbar = ({
@@ -41,7 +46,10 @@ export const Navbar = ({
   editor,
   activeTool,
   onChangeActiveTool,
+  isTemplate,
+  onToggleTemplate,
 }: NavbarProps) => {
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const data = useMutationState({
     filters: {
       mutationKey: ["project", { id }],
@@ -70,7 +78,8 @@ export const Navbar = ({
   });
 
   return (
-    <nav className="w-full flex items-center p-4 h-[68px] gap-x-8 border-b lg:pl-[34px]">
+    <>
+    <nav className="w-full flex items-center p-4 h-[68px] gap-x-8 border-b border-[var(--stroke)] lg:pl-[34px] bg-[var(--panel1)]">
       <Logo />
       <div className="w-full flex items-center gap-x-1 h-full">
         <DropdownMenu modal={false}>
@@ -93,6 +102,24 @@ export const Navbar = ({
                 </p>
               </div>
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onToggleTemplate(!isTemplate)}
+              className="flex items-center gap-x-2"
+            >
+              <div className="size-8 flex items-center justify-center">
+                {isTemplate ? (
+                  <Check className="size-4 text-[var(--gold)]" />
+                ) : (
+                  <div className="size-4 rounded-sm border border-[var(--stroke)]" />
+                )}
+              </div>
+              <div>
+                <p>Save as template</p>
+                <p className="text-xs text-muted-foreground">
+                  Make this reusable
+                </p>
+              </div>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <Separator orientation="vertical" className="mx-2" />
@@ -101,7 +128,7 @@ export const Navbar = ({
             variant="ghost"
             size="icon"
             onClick={() => onChangeActiveTool("select")}
-            className={cn(activeTool === "select" && "bg-gray-100")}
+            className={cn(activeTool === "select" && "bg-[var(--panel2)]")}
           >
             <MousePointerClick className="size-4" />
           </Button>
@@ -152,67 +179,22 @@ export const Navbar = ({
           </div>
         )}
         <div className="ml-auto flex items-center gap-x-4">
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="ghost">
-                Export
-                <Download className="size-4 ml-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-60">
-              <DropdownMenuItem
-                className="flex items-center gap-x-2"
-                onClick={() => editor?.saveJson()}
-              >
-                <CiFileOn className="size-8" />
-                <div>
-                  <p>JSON</p>
-                  <p className="text-xs text-muted-foreground">
-                    Save for later editing
-                  </p>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="flex items-center gap-x-2"
-                onClick={() => editor?.savePng()}
-              >
-                <CiFileOn className="size-8" />
-                <div>
-                  <p>PNG</p>
-                  <p className="text-xs text-muted-foreground">
-                    Best for sharing on the web
-                  </p>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="flex items-center gap-x-2"
-                onClick={() => editor?.saveJpg()}
-              >
-                <CiFileOn className="size-8" />
-                <div>
-                  <p>JPG</p>
-                  <p className="text-xs text-muted-foreground">
-                    Best for printing
-                  </p>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="flex items-center gap-x-2"
-                onClick={() => editor?.saveSvg()}
-              >
-                <CiFileOn className="size-8" />
-                <div>
-                  <p>SVG</p>
-                  <p className="text-xs text-muted-foreground">
-                    Best for editing in vector software
-                  </p>
-                </div>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button size="sm" variant="ghost" onClick={() => setIsExportOpen(true)}>
+            Export
+            <Download className="size-4 ml-4" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => editor?.saveJson()}>
+            Save JSON
+          </Button>
           <UserButton />
         </div>
       </div>
     </nav>
+    <ExportModal
+      editor={editor}
+      open={isExportOpen}
+      onClose={() => setIsExportOpen(false)}
+    />
+    </>
   );
 };

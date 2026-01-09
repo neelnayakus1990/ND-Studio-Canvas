@@ -12,17 +12,25 @@ import { RxTransparencyGrid } from "react-icons/rx";
 import { 
   ArrowUp, 
   ArrowDown, 
+  ArrowUpToLine,
+  ArrowDownToLine,
   ChevronDown, 
   AlignLeft, 
   AlignCenter, 
   AlignRight,
+  Group,
+  Ungroup,
+  Lock,
+  Unlock,
   Trash,
   SquareSplitHorizontal,
-  Copy
+  Copy,
+  Sparkles
 } from "lucide-react";
 
 import { isTextType } from "@/features/editor/utils";
 import { FontSizeInput } from "@/features/editor/components/font-size-input";
+import { NumberInput } from "@/features/editor/components/number-input";
 import { 
   ActiveTool, 
   Editor, 
@@ -53,7 +61,9 @@ export const Toolbar = ({
   const initialFontLinethrough = editor?.getActiveFontLinethrough();
   const initialFontUnderline = editor?.getActiveFontUnderline();
   const initialTextAlign = editor?.getActiveTextAlign();
-  const initialFontSize = editor?.getActiveFontSize() || FONT_SIZE
+  const initialFontSize = editor?.getActiveFontSize() || FONT_SIZE;
+  const initialLineHeight = editor?.getActiveLineHeight() || 1.2;
+  const initialCharSpacing = editor?.getActiveCharSpacing() || 0;
 
   const [properties, setProperties] = useState({
     fillColor: initialFillColor,
@@ -65,6 +75,8 @@ export const Toolbar = ({
     fontUnderline: initialFontUnderline,
     textAlign: initialTextAlign,
     fontSize: initialFontSize,
+    lineHeight: initialLineHeight,
+    charSpacing: initialCharSpacing,
   });
 
   const selectedObject = editor?.selectedObjects[0];
@@ -94,6 +106,30 @@ export const Toolbar = ({
     setProperties((current) => ({
       ...current,
       textAlign: value,
+    }));
+  };
+
+  const onChangeLineHeight = (value: number) => {
+    if (!selectedObject) {
+      return;
+    }
+
+    editor?.changeLineHeight(value);
+    setProperties((current) => ({
+      ...current,
+      lineHeight: value,
+    }));
+  };
+
+  const onChangeCharSpacing = (value: number) => {
+    if (!selectedObject) {
+      return;
+    }
+
+    editor?.changeCharSpacing(value);
+    setProperties((current) => ({
+      ...current,
+      charSpacing: value,
     }));
   };
 
@@ -156,12 +192,12 @@ export const Toolbar = ({
 
   if (editor?.selectedObjects.length === 0) {
     return (
-      <div className="shrink-0 h-[56px] border-b bg-white w-full flex items-center overflow-x-auto z-[49] p-2 gap-x-2" />
+      <div className="shrink-0 h-[56px] border-b border-[var(--stroke)] bg-[var(--panel1)] w-full flex items-center overflow-x-auto z-[49] p-2 gap-x-2" />
     );
   }
 
   return (
-    <div className="shrink-0 h-[56px] border-b bg-white w-full flex items-center overflow-x-auto z-[49] p-2 gap-x-2">
+    <div className="shrink-0 h-[56px] border-b border-[var(--stroke)] bg-[var(--panel1)] w-full flex items-center overflow-x-auto z-[49] p-2 gap-x-2">
       {!isImage && (
         <div className="flex items-center h-full justify-center">
           <Hint label="Color" side="bottom" sideOffset={5}>
@@ -170,7 +206,7 @@ export const Toolbar = ({
               size="icon"
               variant="ghost"
               className={cn(
-                activeTool === "fill" && "bg-gray-100"
+                activeTool === "fill" && "bg-[var(--panel2)]"
               )}
             >
               <div
@@ -189,7 +225,7 @@ export const Toolbar = ({
               size="icon"
               variant="ghost"
               className={cn(
-                activeTool === "stroke-color" && "bg-gray-100"
+                activeTool === "stroke-color" && "bg-[var(--panel2)]"
               )}
             >
               <div
@@ -208,7 +244,7 @@ export const Toolbar = ({
               size="icon"
               variant="ghost"
               className={cn(
-                activeTool === "stroke-width" && "bg-gray-100"
+                activeTool === "stroke-width" && "bg-[var(--panel2)]"
               )}
             >
               <BsBorderWidth className="size-4" />
@@ -225,7 +261,7 @@ export const Toolbar = ({
               variant="ghost"
               className={cn(
                 "w-auto px-2 text-sm",
-                activeTool === "font" && "bg-gray-100"
+                activeTool === "font" && "bg-[var(--panel2)]"
               )}
             >
               <div className="max-w-[100px] truncate">
@@ -244,7 +280,7 @@ export const Toolbar = ({
               size="icon"
               variant="ghost"
               className={cn(
-                properties.fontWeight > 500 && "bg-gray-100"
+                properties.fontWeight > 500 && "bg-[var(--panel2)]"
               )}
             >
               <FaBold className="size-4" />
@@ -260,7 +296,7 @@ export const Toolbar = ({
               size="icon"
               variant="ghost"
               className={cn(
-                properties.fontStyle === "italic" && "bg-gray-100"
+                properties.fontStyle === "italic" && "bg-[var(--panel2)]"
               )}
             >
               <FaItalic className="size-4" />
@@ -276,7 +312,7 @@ export const Toolbar = ({
               size="icon"
               variant="ghost"
               className={cn(
-                properties.fontUnderline && "bg-gray-100"
+                properties.fontUnderline && "bg-[var(--panel2)]"
               )}
             >
               <FaUnderline className="size-4" />
@@ -292,7 +328,7 @@ export const Toolbar = ({
               size="icon"
               variant="ghost"
               className={cn(
-                properties.fontLinethrough && "bg-gray-100"
+                properties.fontLinethrough && "bg-[var(--panel2)]"
               )}
             >
               <FaStrikethrough className="size-4" />
@@ -308,7 +344,7 @@ export const Toolbar = ({
               size="icon"
               variant="ghost"
               className={cn(
-                properties.textAlign === "left" && "bg-gray-100"
+                properties.textAlign === "left" && "bg-[var(--panel2)]"
               )}
             >
               <AlignLeft className="size-4" />
@@ -324,7 +360,7 @@ export const Toolbar = ({
               size="icon"
               variant="ghost"
               className={cn(
-                properties.textAlign === "center" && "bg-gray-100"
+                properties.textAlign === "center" && "bg-[var(--panel2)]"
               )}
             >
               <AlignCenter className="size-4" />
@@ -340,7 +376,7 @@ export const Toolbar = ({
               size="icon"
               variant="ghost"
               className={cn(
-                properties.textAlign === "right" && "bg-gray-100"
+                properties.textAlign === "right" && "bg-[var(--panel2)]"
               )}
             >
               <AlignRight className="size-4" />
@@ -356,6 +392,56 @@ export const Toolbar = ({
          />
         </div>
       )}
+      {isText && (
+        <div className="flex items-center h-full justify-center">
+          <Hint label="Line height" side="bottom" sideOffset={5}>
+            <NumberInput
+              value={properties.lineHeight}
+              step={0.1}
+              min={0.6}
+              onChange={onChangeLineHeight}
+            />
+          </Hint>
+        </div>
+      )}
+      {isText && (
+        <div className="flex items-center h-full justify-center">
+          <Hint label="Letter spacing" side="bottom" sideOffset={5}>
+            <NumberInput
+              value={properties.charSpacing}
+              step={10}
+              min={0}
+              onChange={onChangeCharSpacing}
+            />
+          </Hint>
+        </div>
+      )}
+      {isText && (
+        <div className="flex items-center h-full justify-center">
+          <Hint label="Outline" side="bottom" sideOffset={5}>
+            <Button
+              onClick={() => editor?.toggleTextOutline()}
+              size="icon"
+              variant="ghost"
+            >
+              <Sparkles className="size-4" />
+            </Button>
+          </Hint>
+        </div>
+      )}
+      {isText && (
+        <div className="flex items-center h-full justify-center">
+          <Hint label="Shadow" side="bottom" sideOffset={5}>
+            <Button
+              onClick={() => editor?.toggleTextShadow()}
+              size="icon"
+              variant="ghost"
+            >
+              <SquareSplitHorizontal className="size-4" />
+            </Button>
+          </Hint>
+        </div>
+      )}
       {isImage && (
         <div className="flex items-center h-full justify-center">
           <Hint label="Filters" side="bottom" sideOffset={5}>
@@ -364,7 +450,7 @@ export const Toolbar = ({
               size="icon"
               variant="ghost"
               className={cn(
-                activeTool === "filter" && "bg-gray-100"
+                activeTool === "filter" && "bg-[var(--panel2)]"
               )}
             >
               <TbColorFilter className="size-4" />
@@ -380,7 +466,7 @@ export const Toolbar = ({
               size="icon"
               variant="ghost"
               className={cn(
-                activeTool === "remove-bg" && "bg-gray-100"
+                activeTool === "remove-bg" && "bg-[var(--panel2)]"
               )}
             >
               <SquareSplitHorizontal className="size-4" />
@@ -411,12 +497,34 @@ export const Toolbar = ({
         </Hint>
       </div>
       <div className="flex items-center h-full justify-center">
+        <Hint label="Bring to front" side="bottom" sideOffset={5}>
+          <Button
+            onClick={() => editor?.bringToFront()}
+            size="icon"
+            variant="ghost"
+          >
+            <ArrowUpToLine className="size-4" />
+          </Button>
+        </Hint>
+      </div>
+      <div className="flex items-center h-full justify-center">
+        <Hint label="Send to back" side="bottom" sideOffset={5}>
+          <Button
+            onClick={() => editor?.sendToBack()}
+            size="icon"
+            variant="ghost"
+          >
+            <ArrowDownToLine className="size-4" />
+          </Button>
+        </Hint>
+      </div>
+      <div className="flex items-center h-full justify-center">
         <Hint label="Opacity" side="bottom" sideOffset={5}>
           <Button
             onClick={() => onChangeActiveTool("opacity")}
             size="icon"
             variant="ghost"
-            className={cn(activeTool === "opacity" && "bg-gray-100")}
+            className={cn(activeTool === "opacity" && "bg-[var(--panel2)]")}
           >
             <RxTransparencyGrid className="size-4" />
           </Button>
@@ -437,6 +545,50 @@ export const Toolbar = ({
         </Hint>
       </div>
       <div className="flex items-center h-full justify-center">
+        <Hint label="Group" side="bottom" sideOffset={5}>
+          <Button
+            onClick={() => editor?.groupSelection()}
+            size="icon"
+            variant="ghost"
+          >
+            <Group className="size-4" />
+          </Button>
+        </Hint>
+      </div>
+      <div className="flex items-center h-full justify-center">
+        <Hint label="Ungroup" side="bottom" sideOffset={5}>
+          <Button
+            onClick={() => editor?.ungroupSelection()}
+            size="icon"
+            variant="ghost"
+          >
+            <Ungroup className="size-4" />
+          </Button>
+        </Hint>
+      </div>
+      <div className="flex items-center h-full justify-center">
+        <Hint label="Lock" side="bottom" sideOffset={5}>
+          <Button
+            onClick={() => editor?.lockSelection()}
+            size="icon"
+            variant="ghost"
+          >
+            <Lock className="size-4" />
+          </Button>
+        </Hint>
+      </div>
+      <div className="flex items-center h-full justify-center">
+        <Hint label="Unlock" side="bottom" sideOffset={5}>
+          <Button
+            onClick={() => editor?.unlockSelection()}
+            size="icon"
+            variant="ghost"
+          >
+            <Unlock className="size-4" />
+          </Button>
+        </Hint>
+      </div>
+      <div className="flex items-center h-full justify-center">
         <Hint label="Delete" side="bottom" sideOffset={5}>
           <Button
             onClick={() => editor?.delete()}
@@ -450,3 +602,4 @@ export const Toolbar = ({
     </div>
   );
 };
+

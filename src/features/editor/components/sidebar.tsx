@@ -1,11 +1,13 @@
 "use client";
 
 import { 
+  FolderOpen,
   LayoutTemplate,
   ImageIcon,
   Pencil,
   Settings,
   Shapes,
+  Palette,
   Sparkles,
   Type,
 } from "lucide-react";
@@ -23,13 +25,19 @@ export const Sidebar = ({
   onChangeActiveTool,
 }: SidebarProps) => {
   return (
-    <aside className="bg-white flex flex-col w-[100px] h-full border-r overflow-y-auto">
+    <aside className="bg-[var(--panel2)] flex flex-col w-[100px] h-full border-r border-[var(--stroke)] overflow-y-auto">
       <ul className="flex flex-col">
         <SidebarItem
           icon={LayoutTemplate}
           label="Design"
           isActive={activeTool === "templates"}
           onClick={() => onChangeActiveTool("templates")}
+        />
+        <SidebarItem
+          icon={FolderOpen}
+          label="Assets"
+          isActive={activeTool === "assets"}
+          onClick={() => onChangeActiveTool("assets")}
         />
         <SidebarItem
           icon={ImageIcon}
@@ -54,6 +62,12 @@ export const Sidebar = ({
           label="Draw"
           isActive={activeTool === "draw"}
           onClick={() => onChangeActiveTool("draw")}
+        />
+        <SidebarItem
+          icon={Palette}
+          label="Brand"
+          isActive={activeTool === "brand-kit"}
+          onClick={() => onChangeActiveTool("brand-kit")}
         />
         <SidebarItem
           icon={Sparkles}

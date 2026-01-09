@@ -100,12 +100,62 @@ const app = new Hono()
           width: project.width,
           height: project.height,
           userId: auth.token.id,
+          isTemplate: false,
+          isPro: project.isPro ?? false,
+          thumbnailUrl: project.thumbnailUrl ?? null,
           createdAt: new Date(),
           updatedAt: new Date(),
         })
         .returning();
 
       return c.json({ data: duplicateData[0] });
+    },
+  )
+  .post(
+    "/templates/:id/use",
+    verifyAuth(),
+    zValidator("param", z.object({ id: z.string() })),
+    async (c) => {
+      const auth = c.get("authUser");
+      const { id } = c.req.valid("param");
+
+      if (!auth.token?.id) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const data = await db
+        .select()
+        .from(projects)
+        .where(
+          and(
+            eq(projects.id, id),
+            eq(projects.isTemplate, true),
+          ),
+        );
+
+      if (data.length === 0) {
+        return c.json({ error: "Not found" }, 404);
+      }
+
+      const template = data[0];
+
+      const [newProject] = await db
+        .insert(projects)
+        .values({
+          name: template.name,
+          json: template.json,
+          width: template.width,
+          height: template.height,
+          userId: auth.token.id,
+          isTemplate: false,
+          isPro: template.isPro ?? false,
+          thumbnailUrl: template.thumbnailUrl ?? null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
+      return c.json({ data: newProject });
     },
   )
   .get(

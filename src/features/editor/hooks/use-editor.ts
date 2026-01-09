@@ -69,14 +69,41 @@ const buildEditor = ({
     };
   };
 
-  const savePng = () => {
+  const exportImage = ({
+    format,
+    scale = 1,
+    transparent = false,
+  }: {
+    format: "png" | "jpg";
+    scale?: number;
+    transparent?: boolean;
+  }) => {
     const options = generateSaveOptions();
+    const workspace = getWorkspace();
+    const previousFill = workspace?.get("fill");
+
+    if (transparent && format === "png" && workspace) {
+      workspace.set({ fill: "transparent" });
+    }
 
     canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-    const dataUrl = canvas.toDataURL(options);
+    const dataUrl = canvas.toDataURL({
+      ...options,
+      format,
+      multiplier: scale,
+    });
 
-    downloadFile(dataUrl, "png");
+    if (transparent && format === "png" && workspace) {
+      workspace.set({ fill: previousFill });
+      canvas.renderAll();
+    }
+
+    downloadFile(dataUrl, format);
     autoZoom();
+  };
+
+  const savePng = () => {
+    exportImage({ format: "png" });
   };
 
   const saveSvg = () => {
@@ -90,13 +117,7 @@ const buildEditor = ({
   };
 
   const saveJpg = () => {
-    const options = generateSaveOptions();
-
-    canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-    const dataUrl = canvas.toDataURL(options);
-
-    downloadFile(dataUrl, "jpg");
-    autoZoom();
+    exportImage({ format: "jpg" });
   };
 
   const saveJson = async () => {
@@ -140,6 +161,7 @@ const buildEditor = ({
   };
 
   return {
+    exportImage,
     savePng,
     saveJpg,
     saveSvg,
@@ -167,6 +189,14 @@ const buildEditor = ({
         zoomRatio < 0.2 ? 0.2 : zoomRatio,
       );
     },
+    getZoom: () => canvas.getZoom(),
+    setZoom: (value: number) => {
+      const center = canvas.getCenter();
+      canvas.zoomToPoint(
+        new fabric.Point(center.left, center.top),
+        value,
+      );
+    },
     changeSize: (value: { width: number; height: number }) => {
       const workspace = getWorkspace();
 
@@ -179,6 +209,36 @@ const buildEditor = ({
       workspace?.set({ fill: value });
       canvas.renderAll();
       save();
+    },
+    setBackgroundImage: (value: string) => {
+      const workspace = getWorkspace();
+
+      if (!workspace) {
+        return;
+      }
+
+      const center = workspace.getCenterPoint();
+      fabric.Image.fromURL(
+        value,
+        (image) => {
+          image.scaleToWidth(workspace.width || 0);
+          image.scaleToHeight(workspace.height || 0);
+          image.set({
+            left: center.x,
+            top: center.y,
+            originX: "center",
+            originY: "center",
+            selectable: false,
+            evented: false,
+          });
+
+          canvas.setBackgroundImage(image, () => {
+            canvas.renderAll();
+            save();
+          });
+        },
+        { crossOrigin: "anonymous" },
+      );
     },
     enableDrawingMode: () => {
       canvas.discardActiveObject();
@@ -255,6 +315,94 @@ const buildEditor = ({
           // @ts-ignore
           // Faulty TS library, fontSize exists.
           object.set({ fontSize: value });
+        }
+      });
+      canvas.renderAll();
+    },
+    changeLineHeight: (value: number) => {
+      canvas.getActiveObjects().forEach((object) => {
+        if (isTextType(object.type)) {
+          // @ts-ignore
+          // Faulty TS library, lineHeight exists.
+          object.set({ lineHeight: value });
+        }
+      });
+      canvas.renderAll();
+    },
+    getActiveLineHeight: () => {
+      const selectedObject = selectedObjects[0];
+
+      if (!selectedObject) {
+        return 1.2;
+      }
+
+      // @ts-ignore
+      // Faulty TS library, lineHeight exists.
+      const value = selectedObject.get("lineHeight") || 1.2;
+
+      return value;
+    },
+    changeCharSpacing: (value: number) => {
+      canvas.getActiveObjects().forEach((object) => {
+        if (isTextType(object.type)) {
+          // @ts-ignore
+          // Faulty TS library, charSpacing exists.
+          object.set({ charSpacing: value });
+        }
+      });
+      canvas.renderAll();
+    },
+    getActiveCharSpacing: () => {
+      const selectedObject = selectedObjects[0];
+
+      if (!selectedObject) {
+        return 0;
+      }
+
+      // @ts-ignore
+      // Faulty TS library, charSpacing exists.
+      const value = selectedObject.get("charSpacing") || 0;
+
+      return value;
+    },
+    toggleTextOutline: () => {
+      canvas.getActiveObjects().forEach((object) => {
+        if (!isTextType(object.type)) {
+          return;
+        }
+
+        const currentWidth = object.get("strokeWidth") || 0;
+
+        if (currentWidth > 0) {
+          object.set({ strokeWidth: 0, stroke: undefined });
+        } else {
+          const currentFill = object.get("fill");
+          const strokeColorValue =
+            typeof currentFill === "string" ? currentFill : fillColor;
+          object.set({ stroke: strokeColorValue, strokeWidth: 2 });
+        }
+      });
+      canvas.renderAll();
+    },
+    toggleTextShadow: () => {
+      canvas.getActiveObjects().forEach((object) => {
+        if (!isTextType(object.type)) {
+          return;
+        }
+
+        const currentShadow = object.get("shadow");
+
+        if (currentShadow) {
+          object.set({ shadow: undefined });
+        } else {
+          object.set({
+            shadow: new fabric.Shadow({
+              color: "rgba(0,0,0,0.35)",
+              blur: 12,
+              offsetX: 0,
+              offsetY: 6,
+            }),
+          });
         }
       });
       canvas.renderAll();
@@ -399,6 +547,72 @@ const buildEditor = ({
       const workspace = getWorkspace();
       workspace?.sendToBack();
     },
+    bringToFront: () => {
+      canvas.getActiveObjects().forEach((object) => {
+        canvas.bringToFront(object);
+      });
+      const workspace = getWorkspace();
+      workspace?.sendToBack();
+      canvas.renderAll();
+    },
+    sendToBack: () => {
+      canvas.getActiveObjects().forEach((object) => {
+        canvas.sendToBack(object);
+      });
+      const workspace = getWorkspace();
+      workspace?.sendToBack();
+      canvas.renderAll();
+    },
+    groupSelection: () => {
+      const activeObject = canvas.getActiveObject();
+
+      if (activeObject?.type !== "activeSelection") {
+        return;
+      }
+
+      // @ts-ignore
+      const group = activeObject.toGroup();
+      canvas.setActiveObject(group);
+      canvas.renderAll();
+    },
+    ungroupSelection: () => {
+      const activeObject = canvas.getActiveObject();
+
+      if (activeObject?.type !== "group") {
+        return;
+      }
+
+      // @ts-ignore
+      const selection = activeObject.toActiveSelection();
+      canvas.setActiveObject(selection);
+      canvas.renderAll();
+    },
+    lockSelection: () => {
+      canvas.getActiveObjects().forEach((object) => {
+        object.set({
+          lockMovementX: true,
+          lockMovementY: true,
+          lockScalingX: true,
+          lockScalingY: true,
+          lockRotation: true,
+          hasControls: false,
+        });
+      });
+      canvas.renderAll();
+    },
+    unlockSelection: () => {
+      canvas.getActiveObjects().forEach((object) => {
+        object.set({
+          lockMovementX: false,
+          lockMovementY: false,
+          lockScalingX: false,
+          lockScalingY: false,
+          lockRotation: false,
+          hasControls: true,
+        });
+      });
+      canvas.renderAll();
+    },
     changeFontFamily: (value: string) => {
       setFontFamily(value);
       canvas.getActiveObjects().forEach((object) => {
@@ -445,6 +659,87 @@ const buildEditor = ({
         object.set({ strokeDashArray: value });
       });
       canvas.renderAll();
+    },
+    applyBrandKit: (kit) => {
+      const palette = kit.colors || [];
+      const primaryFont = kit.fonts?.[0] || fontFamily;
+      const logoLight = kit.logos?.lightUrl;
+      const logoDark = kit.logos?.darkUrl;
+
+      const objects = canvas.getObjects();
+
+      objects.forEach((object, index) => {
+        const name = object.get("name") as string | undefined;
+
+        if (name?.startsWith("brand-color-") && palette.length > 0) {
+          const parts = name.split("-");
+          const colorIndex = parseInt(parts[parts.length - 1] || "1", 10) - 1;
+          const color = palette[colorIndex % palette.length];
+          if (color) {
+            object.set({ fill: color, stroke: color });
+          }
+        }
+
+        if (isTextType(object.type)) {
+          // @ts-ignore
+          // Faulty TS library, fontFamily exists.
+          object.set({ fontFamily: primaryFont });
+        }
+
+        if (palette.length > 0 && !name?.startsWith("brand-color-")) {
+          const color = palette[index % palette.length];
+          if (color && object.get("fill")) {
+            object.set({ fill: color });
+          }
+        }
+
+        if (name === "brand-logo-light" && logoLight) {
+          const { left, top, scaleX, scaleY, angle, originX, originY } = object;
+          fabric.Image.fromURL(
+            logoLight,
+            (image) => {
+              image.set({
+                left,
+                top,
+                scaleX,
+                scaleY,
+                angle,
+                originX,
+                originY,
+              });
+              canvas.remove(object);
+              canvas.add(image);
+              canvas.renderAll();
+            },
+            { crossOrigin: "anonymous" },
+          );
+        }
+
+        if (name === "brand-logo-dark" && logoDark) {
+          const { left, top, scaleX, scaleY, angle, originX, originY } = object;
+          fabric.Image.fromURL(
+            logoDark,
+            (image) => {
+              image.set({
+                left,
+                top,
+                scaleX,
+                scaleY,
+                angle,
+                originX,
+                originY,
+              });
+              canvas.remove(object);
+              canvas.add(image);
+              canvas.renderAll();
+            },
+            { crossOrigin: "anonymous" },
+          );
+        }
+      });
+
+      canvas.renderAll();
+      save();
     },
     addCircle: () => {
       const object = new fabric.Circle({
@@ -533,6 +828,40 @@ const buildEditor = ({
         }
       );
       addToCanvas(object);
+    },
+    addLine: () => {
+      const object = new fabric.Line([0, 0, 320, 0], {
+        left: 100,
+        top: 100,
+        stroke: strokeColor,
+        strokeWidth: strokeWidth,
+      });
+
+      addToCanvas(object);
+    },
+    addArrow: () => {
+      const line = new fabric.Line([0, 0, 260, 0], {
+        stroke: strokeColor,
+        strokeWidth: strokeWidth,
+      });
+
+      const head = new fabric.Triangle({
+        left: 260,
+        top: 0,
+        width: 28,
+        height: 28,
+        fill: strokeColor,
+        originX: "center",
+        originY: "center",
+        angle: 90,
+      });
+
+      const group = new fabric.Group([line, head], {
+        left: 100,
+        top: 120,
+      });
+
+      addToCanvas(group);
     },
     canvas,
     getActiveFontWeight: () => {

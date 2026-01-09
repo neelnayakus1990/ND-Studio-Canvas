@@ -6,14 +6,14 @@ import { Loader, TriangleAlert } from "lucide-react";
 import { usePaywall } from "@/features/subscriptions/hooks/use-paywall";
 
 import { ResponseType, useGetTemplates } from "@/features/projects/api/use-get-templates";
-import { useCreateProject } from "@/features/projects/api/use-create-project";
+import { useUseTemplate } from "@/features/projects/api/use-use-template";
 
 import { TemplateCard } from "./template-card";
 
 export const TemplatesSection = () => {
   const { shouldBlock, triggerPaywall } = usePaywall();
   const router = useRouter();
-  const mutation = useCreateProject();
+  const mutation = useUseTemplate();
 
   const { 
     data, 
@@ -28,17 +28,12 @@ export const TemplatesSection = () => {
     }
 
     mutation.mutate(
-      {
-        name: `${template.name} project`,
-        json: template.json,
-        width: template.width,
-        height: template.height,
-      },
+      { id: template.id },
       {
         onSuccess: ({ data }) => {
           router.push(`/editor/${data.id}`);
         },
-      },
+      }
     );
   };
 
@@ -85,7 +80,7 @@ export const TemplatesSection = () => {
           <TemplateCard
             key={template.id}
             title={template.name}
-            imageSrc={template.thumbnailUrl || ""}
+            imageSrc={template.thumbnailUrl || "/placeholder.svg"}
             onClick={() => onClick(template)}
             disabled={mutation.isPending}
             description={`${template.width} x ${template.height} px`}

@@ -1,6 +1,5 @@
 import { fabric } from "fabric";
 import { ITextboxOptions } from "fabric/fabric-impl";
-import * as material from "material-colors";
 
 export const JSON_KEYS = [
   "name",
@@ -40,6 +39,9 @@ export const filters = [
 ];
 
 export const fonts = [
+  "Inter",
+  "Poppins",
+  "Montserrat",
   "Arial",
   "Arial Black",
   "Verdana",
@@ -68,27 +70,18 @@ export const selectionDependentTools = [
   "remove-bg",
   "stroke-color",
   "stroke-width",
+  "brand-kit",
 ];
 
 export const colors = [
-  material.red["500"],
-  material.pink["500"],
-  material.purple["500"],
-  material.deepPurple["500"],
-  material.indigo["500"],
-  material.blue["500"],
-  material.lightBlue["500"],
-  material.cyan["500"],
-  material.teal["500"],
-  material.green["500"],
-  material.lightGreen["500"],
-  material.lime["500"],
-  material.yellow["500"],
-  material.amber["500"],
-  material.orange["500"],
-  material.deepOrange["500"],
-  material.brown["500"],
-  material.blueGrey["500"],
+  "#0F0F10",
+  "#121214",
+  "#0C0C0D",
+  "#EDEDED",
+  "#A9A9B2",
+  "#E6C27A",
+  "#F5E3A3",
+  "#C9A24D",
   "transparent",
 ];
 
@@ -96,6 +89,7 @@ export type ActiveTool =
   | "select"
   | "shapes"
   | "text"
+  | "assets"
   | "images"
   | "draw"
   | "fill"
@@ -104,6 +98,7 @@ export type ActiveTool =
   | "font"
   | "opacity"
   | "filter"
+  | "brand-kit"
   | "settings"
   | "ai"
   | "remove-bg"
@@ -204,6 +199,11 @@ export type BuildEditorProps = {
 };
 
 export interface Editor {
+  exportImage: (options: {
+    format: "png" | "jpg";
+    scale?: number;
+    transparent?: boolean;
+  }) => void;
   savePng: () => void;
   saveJpg: () => void;
   saveSvg: () => void;
@@ -240,21 +240,43 @@ export interface Editor {
   getActiveFontWeight: () => number;
   getActiveFontFamily: () => string;
   changeFontFamily: (value: string) => void;
+  changeLineHeight: (value: number) => void;
+  getActiveLineHeight: () => number;
+  changeCharSpacing: (value: number) => void;
+  getActiveCharSpacing: () => number;
+  toggleTextOutline: () => void;
+  toggleTextShadow: () => void;
   addText: (value: string, options?: ITextboxOptions) => void;
   getActiveOpacity: () => number;
   changeOpacity: (value: number) => void;
   bringForward: () => void;
   sendBackwards: () => void;
+  bringToFront: () => void;
+  sendToBack: () => void;
+  groupSelection: () => void;
+  ungroupSelection: () => void;
+  lockSelection: () => void;
+  unlockSelection: () => void;
   changeStrokeWidth: (value: number) => void;
   changeFillColor: (value: string) => void;
   changeStrokeColor: (value: string) => void;
   changeStrokeDashArray: (value: number[]) => void;
+  applyBrandKit: (kit: {
+    colors: string[];
+    fonts: string[];
+    logos?: { lightUrl?: string; darkUrl?: string };
+  }) => void;
   addCircle: () => void;
   addSoftRectangle: () => void;
   addRectangle: () => void;
   addTriangle: () => void;
   addInverseTriangle: () => void;
   addDiamond: () => void;
+  addLine: () => void;
+  addArrow: () => void;
+  setBackgroundImage: (value: string) => void;
+  getZoom: () => number;
+  setZoom: (value: number) => void;
   canvas: fabric.Canvas;
   getActiveFillColor: () => string;
   getActiveStrokeColor: () => string;
