@@ -24,7 +24,7 @@ export const RemoveBgSidebar = ({
   activeTool,
   onChangeActiveTool,
 }: RemoveBgSidebarProps) => {
-  const { shouldBlock, triggerPaywall } = usePaywall();
+  const { shouldBlock, triggerPaywall, settings } = usePaywall();
   const mutation = useRemoveBg();
 
   const selectedObject = editor?.selectedObjects[0];
@@ -37,7 +37,7 @@ export const RemoveBgSidebar = ({
   };
 
   const onClick = () => {
-    if (shouldBlock) {
+    if (shouldBlock && !settings?.freeAllowsBgRemoval) {
       triggerPaywall();
       return;
     }
@@ -45,7 +45,7 @@ export const RemoveBgSidebar = ({
     mutation.mutate({
       image: imageSrc,
     }, {
-      onSuccess: ({ data }) => {
+      onSuccess: (data) => {
         editor?.addImage(data);
       },
     });

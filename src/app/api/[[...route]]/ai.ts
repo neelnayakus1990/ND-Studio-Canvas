@@ -2,11 +2,29 @@ import { z } from "zod";
 import { Hono } from "hono";
 import { verifyAuth } from "@hono/auth-js";
 import { zValidator } from "@hono/zod-validator";
+import { eq } from "drizzle-orm";
 
 import { replicate } from "@/lib/replicate";
 import { validateServerEnv } from "@/lib/env";
+import { db } from "@/db/drizzle";
+import { subscriptions } from "@/db/schema";
+import { checkIsActive } from "@/features/subscriptions/lib";
+import { getAppSettings } from "@/lib/settings";
 
 validateServerEnv({ ai: true });
+
+const canUseAi = async (userId: string, allowFree: boolean) => {
+  if (allowFree) {
+    return true;
+  }
+
+  const [subscription] = await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.userId, userId));
+
+  return checkIsActive(subscription);
+};
 
 const app = new Hono()
   .post(
@@ -19,6 +37,19 @@ const app = new Hono()
       }),
     ),
     async (c) => {
+      const auth = c.get("authUser");
+
+      if (!auth.token?.id) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const settings = await getAppSettings();
+      const allowed = await canUseAi(auth.token.id, settings.freeAllowsBgRemoval);
+
+      if (!allowed) {
+        return c.json({ error: "Paid feature" }, 402);
+      }
+
       const { image } = c.req.valid("json");
 
       const input = {
@@ -42,6 +73,19 @@ const app = new Hono()
       }),
     ),
     async (c) => {
+      const auth = c.get("authUser");
+
+      if (!auth.token?.id) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const settings = await getAppSettings();
+      const allowed = await canUseAi(auth.token.id, settings.freeAllowsAi);
+
+      if (!allowed) {
+        return c.json({ error: "Paid feature" }, 402);
+      }
+
       const { prompt } = c.req.valid("json");
 
       const input = {

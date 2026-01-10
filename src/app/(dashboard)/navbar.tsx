@@ -1,11 +1,15 @@
 import { UserButton } from "@/features/auth/components/user-button"
-import { FREE_PROJECT_LIMIT, FREE_TEMPLATE_LIMIT } from "@/lib/free-tier";
+import type { AppSettings } from "@/lib/settings";
 
-export const Navbar = () => {
+interface NavbarProps {
+  settings: AppSettings;
+}
+
+export const Navbar = ({ settings }: NavbarProps) => {
   return (
     <nav className="w-full flex items-center p-4 h-[68px] bg-[var(--panel1)] border-b border-[var(--stroke)]">
       <div className="text-xs text-[var(--muted-text)]">
-        Free plan: {FREE_PROJECT_LIMIT} projects / {FREE_TEMPLATE_LIMIT} templates
+        Free plan: {settings.freeProjectLimit} projects / {settings.freeTemplateLimit} templates
       </div>
       <div className="ml-auto">
         <UserButton />

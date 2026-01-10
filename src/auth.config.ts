@@ -10,6 +10,7 @@ import { DrizzleAdapter } from "@auth/drizzle-adapter";
 
 import { db } from "@/db/drizzle";
 import { users } from "@/db/schema";
+import { getOAuthProviderStatus } from "@/lib/settings";
 
 const CredentialsSchema = z.object({
   email: z.string().email(),
@@ -67,9 +68,19 @@ export default {
 
         return user;
       },
-    }), 
-    GitHub, 
-    Google
+    }),
+    ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
+      ? [GitHub({
+          clientId: process.env.GITHUB_CLIENT_ID,
+          clientSecret: process.env.GITHUB_CLIENT_SECRET,
+        })]
+      : []),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [Google({
+          clientId: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        })]
+      : []),
   ],
   pages: {
     signIn: "/sign-in",
@@ -92,6 +103,22 @@ export default {
       }
 
       return token;
-    }
+    },
+    async signIn({ account }) {
+      if (!account) {
+        return true;
+      }
+
+      if (account.provider === "credentials") {
+        return true;
+      }
+
+      if (account.provider === "github" || account.provider === "google") {
+        const status = await getOAuthProviderStatus(account.provider);
+        return status.enabled;
+      }
+
+      return true;
+    },
   },
 } satisfies NextAuthConfig

@@ -13,6 +13,10 @@ export const useGetSubscription = (enabled = true) => {
         return null;
       }
 
+      if (response.status === 503) {
+        return { active: false };
+      }
+
       if (!response.ok) {
         throw new Error("Something went wrong");
       }

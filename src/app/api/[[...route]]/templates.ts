@@ -7,8 +7,8 @@ import { zValidator } from "@hono/zod-validator";
 import { db } from "@/db/drizzle";
 import { projects, subscriptions } from "@/db/schema";
 import { checkIsActive } from "@/features/subscriptions/lib";
-import { FREE_PROJECT_LIMIT } from "@/lib/free-tier";
 import { getSystemUserId } from "@/lib/system-user";
+import { getAppSettings } from "@/lib/settings";
 
 const app = new Hono().post(
   "/:id/use",
@@ -51,6 +51,7 @@ const app = new Hono().post(
     const isPro = checkIsActive(subscription);
 
     if (!isPro) {
+      const settings = await getAppSettings();
       const [{ count: projectCount }] = await db
         .select({ count: count() })
         .from(projects)
@@ -61,7 +62,7 @@ const app = new Hono().post(
           )
         );
 
-      if (Number(projectCount) >= FREE_PROJECT_LIMIT) {
+      if (Number(projectCount) >= settings.freeProjectLimit) {
         return c.json({ error: "Free project limit reached" }, 402);
       }
     }

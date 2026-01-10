@@ -11,6 +11,7 @@ import assets from "./assets";
 import brandKits from "./brand-kits";
 import publicRoutes from "./public";
 import templates from "./templates";
+import admin from "./admin";
 
 import authConfig from "@/auth.config";
 
@@ -37,7 +38,8 @@ const routes = app
   .route("/assets", assets)
   .route("/brand-kits", brandKits)
   .route("/public", publicRoutes)
-  .route("/templates", templates);
+  .route("/templates", templates)
+  .route("/admin", admin);
 
 export const GET = handle(app);
 export const POST = handle(app);

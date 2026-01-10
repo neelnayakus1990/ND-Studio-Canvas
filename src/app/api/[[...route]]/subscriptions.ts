@@ -1,19 +1,28 @@
-import Stripe from "stripe";
 import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 import { verifyAuth } from "@hono/auth-js";
 
 import { checkIsActive } from "@/features/subscriptions/lib";
 
-import { stripe } from "@/lib/stripe";
+import Stripe from "stripe";
+import { getStripe } from "@/lib/stripe";
 import { db } from "@/db/drizzle";
 import { subscriptions } from "@/db/schema";
-import { validateServerEnv } from "@/lib/env";
-
-validateServerEnv({ billing: true });
+import { isBillingEnabled, validateServerEnv } from "@/lib/env";
 
 const app = new Hono()
   .post("/billing", verifyAuth(), async (c) => {
+    if (!isBillingEnabled()) {
+      return c.json({ error: "Billing disabled" }, 503);
+    }
+
+    validateServerEnv({ billing: true });
+    const stripe = getStripe();
+
+    if (!stripe) {
+      return c.json({ error: "Billing disabled" }, 503);
+    }
+
     const auth = c.get("authUser");
 
     if (!auth.token?.id) {
@@ -41,6 +50,10 @@ const app = new Hono()
     return c.json({ data: session.url });
   })
   .get("/current", verifyAuth(), async (c) => {
+    if (!isBillingEnabled()) {
+      return c.json({ data: { active: false } });
+    }
+
     const auth = c.get("authUser");
 
     if (!auth.token?.id) {
@@ -66,6 +79,17 @@ const app = new Hono()
     });
   })
   .post("/checkout", verifyAuth(), async (c) => {
+    if (!isBillingEnabled()) {
+      return c.json({ error: "Billing disabled" }, 503);
+    }
+
+    validateServerEnv({ billing: true });
+    const stripe = getStripe();
+
+    if (!stripe) {
+      return c.json({ error: "Billing disabled" }, 503);
+    }
+
     const auth = c.get("authUser");
 
     if (!auth.token?.id) {
@@ -101,70 +125,79 @@ const app = new Hono()
   .post(
     "/webhook",
     async (c) => {
+      if (!isBillingEnabled()) {
+        return c.json({ error: "Billing disabled" }, 503);
+      }
+
+      validateServerEnv({ billing: true });
+      const stripe = getStripe();
+
+      if (!stripe) {
+        return c.json({ error: "Billing disabled" }, 503);
+      }
+
       const body = await c.req.text();
       const signature = c.req.header("Stripe-Signature") as string;
 
-      let event: Stripe.Event;
-
       try {
-        event = stripe.webhooks.constructEvent(
+        const event = stripe.webhooks.constructEvent(
           body,
           signature,
           process.env.STRIPE_WEBHOOK_SECRET!
         );
+
+        const session = event.data.object as Stripe.Checkout.Session;
+
+        if (event.type === "checkout.session.completed") {
+          const subscription = await stripe.subscriptions.retrieve(
+            session.subscription as string,
+          );
+
+          if (!session?.metadata?.userId) {
+            return c.json({ error: "Invalid session" }, 400);
+          }
+
+          await db
+            .insert(subscriptions)
+            .values({
+              status: subscription.status,
+              userId: session.metadata.userId,
+              subscriptionId: subscription.id,
+              customerId: subscription.customer as string,
+              priceId: subscription.items.data[0].price.product as string,
+              currentPeriodEnd: new Date(
+                subscription.current_period_end * 1000
+              ),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+        }
+
+        if (event.type === "invoice.payment_succeeded") {
+          const subscription = await stripe.subscriptions.retrieve(
+            session.subscription as string,
+          );
+
+          if (!session?.metadata?.userId) {
+            return c.json({ error: "Invalid session" }, 400);
+          }
+
+          await db
+            .update(subscriptions)
+            .set({
+              status: subscription.status,
+              currentPeriodEnd: new Date(
+                subscription.current_period_end * 1000,
+              ),
+              updatedAt: new Date(),
+            })
+            .where(eq(subscriptions.id, subscription.id))
+        }
+
+        return c.json(null, 200);
       } catch (error) {
         return c.json({ error: "Invalid signature" }, 400);
       }
-
-      const session = event.data.object as Stripe.Checkout.Session;
-
-      if (event.type === "checkout.session.completed") {
-        const subscription = await stripe.subscriptions.retrieve(
-          session.subscription as string,
-        );
-
-        if (!session?.metadata?.userId) {
-          return c.json({ error: "Invalid session" }, 400);
-        }
-
-        await db
-          .insert(subscriptions)
-          .values({
-            status: subscription.status,
-            userId: session.metadata.userId,
-            subscriptionId: subscription.id,
-            customerId: subscription.customer as string,
-            priceId: subscription.items.data[0].price.product as string,
-            currentPeriodEnd: new Date(
-              subscription.current_period_end * 1000
-            ),
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
-      }
-
-      if (event.type === "invoice.payment_succeeded") {
-        const subscription = await stripe.subscriptions.retrieve(
-          session.subscription as string,
-        );
-
-        if (!session?.metadata?.userId) {
-          return c.json({ error: "Invalid session" }, 400);
-        }
-
-        await db
-          .update(subscriptions)
-          .set({
-            status: subscription.status,
-            currentPeriodEnd: new Date(
-              subscription.current_period_end * 1000,
-            ),
-            updatedAt: new Date(),
-          })
-          .where(eq(subscriptions.id, subscription.id))
-      }
-
-      return c.json(null, 200);
     },
   );
 

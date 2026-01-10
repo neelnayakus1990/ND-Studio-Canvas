@@ -14,6 +14,10 @@ export const useBilling = () => {
     mutationFn: async () => {
       const response = await client.api.subscriptions.billing.$post();
 
+      if (response.status === 503) {
+        throw new Error("Billing disabled");
+      }
+
       if (!response.ok) {
         throw new Error("Failed to create session");
       }
@@ -23,7 +27,11 @@ export const useBilling = () => {
     onSuccess: ({ data }) => {
       window.location.href = data;
     },
-    onError: () => {
+    onError: (error) => {
+      if (error.message === "Billing disabled") {
+        toast.error("Billing is not configured yet.");
+        return;
+      }
       toast.error("Failed to create session");
     },
   });

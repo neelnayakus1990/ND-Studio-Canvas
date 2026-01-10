@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { Editor } from "@/features/editor/types";
+import { usePaywall } from "@/features/subscriptions/hooks/use-paywall";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,11 +22,17 @@ interface ExportModalProps {
 }
 
 export const ExportModal = ({ editor, open, onClose }: ExportModalProps) => {
+  const { shouldBlock, triggerPaywall, settings } = usePaywall();
   const [format, setFormat] = useState<"png" | "jpg">("png");
   const [scale, setScale] = useState(1);
   const [transparent, setTransparent] = useState(false);
 
   const onExport = () => {
+    if (shouldBlock && !settings?.freeAllowsExport) {
+      triggerPaywall();
+      return;
+    }
+
     editor?.exportImage({
       format,
       scale,

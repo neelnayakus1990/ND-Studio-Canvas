@@ -2,11 +2,14 @@ import { useMutation } from "@tanstack/react-query";
 import { InferRequestType, InferResponseType } from "hono";
 
 import { client } from "@/lib/hono";
+import { useSubscriptionModal } from "@/features/subscriptions/store/use-subscription-modal";
 
-type ResponseType = InferResponseType<typeof client.api.ai["remove-bg"]["$post"]>;
+type ResponseType = string;
 type RequestType = InferRequestType<typeof client.api.ai["remove-bg"]["$post"]>["json"];
 
 export const useRemoveBg = () => {
+  const subscriptionModal = useSubscriptionModal();
+
   const mutation = useMutation<
     ResponseType,
     Error,
@@ -14,7 +17,17 @@ export const useRemoveBg = () => {
   >({
     mutationFn: async (json) => {
       const response = await client.api.ai["remove-bg"].$post({ json });
-      return await response.json();
+
+      if (response.status === 402) {
+        subscriptionModal.onOpen();
+        throw new Error("Paid feature");
+      }
+
+      const body = (await response.json()) as { data?: string };
+      if (!body.data) {
+        throw new Error("Failed to remove background");
+      }
+      return body.data;
     },
   });
 

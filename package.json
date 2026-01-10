@@ -11,7 +11,8 @@
     "db:migrate": "bunx drizzle-kit migrate",
     "db:studio": "bunx drizzle-kit studio",
     "db:seed-templates": "bun run scripts/seed-templates.ts",
-    "db:seed": "bun run scripts/seed.ts"
+    "db:seed": "bun run scripts/seed.ts",
+    "db:setup-admin": "bun run scripts/create-admin-tables.ts"
   },
   "dependencies": {
     "@auth/core": "0.41.0",

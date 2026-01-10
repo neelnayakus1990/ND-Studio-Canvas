@@ -7,8 +7,8 @@ import { zValidator } from "@hono/zod-validator";
 import { db } from "@/db/drizzle";
 import { projects, projectsInsertSchema, subscriptions } from "@/db/schema";
 import { checkIsActive } from "@/features/subscriptions/lib";
-import { FREE_PROJECT_LIMIT, FREE_TEMPLATE_LIMIT } from "@/lib/free-tier";
 import { getSystemUserId } from "@/lib/system-user";
+import { getAppSettings } from "@/lib/settings";
 
 const getIsPro = async (userId: string) => {
   const [subscription] = await db
@@ -26,6 +26,7 @@ const canCreateProject = async (userId: string) => {
     return true;
   }
 
+  const settings = await getAppSettings();
   const [{ count: projectCount }] = await db
     .select({ count: count() })
     .from(projects)
@@ -36,7 +37,7 @@ const canCreateProject = async (userId: string) => {
       )
     );
 
-  return Number(projectCount) < FREE_PROJECT_LIMIT;
+  return Number(projectCount) < settings.freeProjectLimit;
 };
 
 const canCreateTemplate = async (userId: string) => {
@@ -46,6 +47,7 @@ const canCreateTemplate = async (userId: string) => {
     return true;
   }
 
+  const settings = await getAppSettings();
   const baseQuery = db
     .select({ count: count() })
     .from(projects)
@@ -58,7 +60,7 @@ const canCreateTemplate = async (userId: string) => {
 
   const [{ count: templateCount }] = await baseQuery;
 
-  return Number(templateCount) < FREE_TEMPLATE_LIMIT;
+  return Number(templateCount) < settings.freeTemplateLimit;
 };
 
 const app = new Hono()

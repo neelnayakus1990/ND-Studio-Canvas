@@ -24,7 +24,7 @@ export const AiSidebar = ({
   activeTool,
   onChangeActiveTool,
 }: AiSidebarProps) => {
-  const { shouldBlock, triggerPaywall } = usePaywall();
+  const { shouldBlock, triggerPaywall, settings } = usePaywall();
   const mutation = useGenerateImage();
 
   const [value, setValue] = useState("");
@@ -34,13 +34,13 @@ export const AiSidebar = ({
   ) => {
     e.preventDefault();
 
-    if (shouldBlock) {
+    if (shouldBlock && !settings?.freeAllowsAi) {
       triggerPaywall();
       return;
     }
 
     mutation.mutate({ prompt: value }, {
-      onSuccess: ({ data }) => {
+      onSuccess: (data) => {
         editor?.addImage(data);
       }
     });

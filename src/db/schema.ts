@@ -141,6 +141,29 @@ export const subscriptions = pgTable("subscription", {
   updatedAt: timestamp("updatedAt", { mode: "date" }).notNull(),
 });
 
+export const appSettings = pgTable("app_settings", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  freeProjectLimit: integer("freeProjectLimit").notNull(),
+  freeTemplateLimit: integer("freeTemplateLimit").notNull(),
+  freeAllowsAi: boolean("freeAllowsAi").notNull().default(false),
+  freeAllowsBgRemoval: boolean("freeAllowsBgRemoval").notNull().default(false),
+  freeAllowsExport: boolean("freeAllowsExport").notNull().default(true),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).notNull(),
+});
+
+export const oauthProviders = pgTable("oauth_provider", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  provider: text("provider").notNull(),
+  clientId: text("clientId"),
+  clientSecret: text("clientSecret"),
+  enabled: boolean("enabled").notNull().default(false),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).notNull(),
+});
+
 export const assetTypeEnum = pgEnum("asset_type", [
   "image",
   "icon",

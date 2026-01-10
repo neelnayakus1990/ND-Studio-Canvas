@@ -6,6 +6,8 @@ import { zValidator } from "@hono/zod-validator";
 import { db } from "@/db/drizzle";
 import { assets, projects } from "@/db/schema";
 import { getSystemUserId } from "@/lib/system-user";
+import { getAppSettings, getOAuthProviderSettings } from "@/lib/settings";
+import { isBillingEnabled } from "@/lib/env";
 
 const app = new Hono()
   .get("/templates", async (c) => {
@@ -95,6 +97,25 @@ const app = new Hono()
       .orderBy(desc(assets.createdAt));
 
     return c.json({ data });
+  })
+  .get("/settings", async (c) => {
+    const settings = await getAppSettings();
+
+    return c.json({
+      data: {
+        ...settings,
+        billingEnabled: isBillingEnabled(),
+      },
+    });
+  })
+  .get("/oauth", async (c) => {
+    const providers = await getOAuthProviderSettings();
+    return c.json({
+      data: providers.map((provider) => ({
+        provider: provider.provider,
+        enabled: provider.enabled,
+      })),
+    });
   });
 
 export default app;

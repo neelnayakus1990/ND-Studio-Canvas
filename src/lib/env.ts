@@ -17,14 +17,14 @@ const requiredBilling = [
   "STRIPE_WEBHOOK_SECRET",
 ];
 
-const isBillingEnabled = () => {
+export const isBillingEnabled = () => {
   return (
     process.env.ENABLE_BILLING === "true" ||
     requiredBilling.some((key) => !!process.env[key])
   );
 };
 
-const isAiEnabled = () => {
+export const isAiEnabled = () => {
   return (
     process.env.ENABLE_AI === "true" ||
     requiredAi.some((key) => !!process.env[key])
