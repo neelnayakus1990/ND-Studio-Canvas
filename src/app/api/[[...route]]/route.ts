@@ -9,6 +9,8 @@ import projects from "./projects";
 import subscriptions from "./subscriptions";
 import assets from "./assets";
 import brandKits from "./brand-kits";
+import publicRoutes from "./public";
+import templates from "./templates";
 
 import authConfig from "@/auth.config";
 
@@ -33,7 +35,9 @@ const routes = app
   .route("/projects", projects)
   .route("/subscriptions", subscriptions)
   .route("/assets", assets)
-  .route("/brand-kits", brandKits);
+  .route("/brand-kits", brandKits)
+  .route("/public", publicRoutes)
+  .route("/templates", templates);
 
 export const GET = handle(app);
 export const POST = handle(app);

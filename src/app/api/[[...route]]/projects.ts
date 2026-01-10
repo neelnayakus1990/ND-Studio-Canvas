@@ -8,6 +8,7 @@ import { db } from "@/db/drizzle";
 import { projects, projectsInsertSchema, subscriptions } from "@/db/schema";
 import { checkIsActive } from "@/features/subscriptions/lib";
 import { FREE_PROJECT_LIMIT, FREE_TEMPLATE_LIMIT } from "@/lib/free-tier";
+import { getSystemUserId } from "@/lib/system-user";
 
 const getIsPro = async (userId: string) => {
   const [subscription] = await db
@@ -72,12 +73,28 @@ const app = new Hono()
       }),
     ),
     async (c) => {
+      const auth = c.get("authUser");
       const { page, limit } = c.req.valid("query");
+
+      if (!auth.token?.id) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const systemUserId = await getSystemUserId();
+
+      const ownerCondition = systemUserId
+        ? or(eq(projects.userId, auth.token.id), eq(projects.userId, systemUserId))
+        : eq(projects.userId, auth.token.id);
 
       const data = await db
         .select()
         .from(projects)
-        .where(eq(projects.isTemplate, true))
+        .where(
+          and(
+            eq(projects.isTemplate, true),
+            ownerCondition
+          )
+        )
         .limit(limit)
         .offset((page -1) * limit)
         .orderBy(
@@ -188,6 +205,11 @@ const app = new Hono()
         return c.json({ error: "Free project limit reached" }, 402);
       }
 
+      const systemUserId = await getSystemUserId();
+      const ownerCondition = systemUserId
+        ? or(eq(projects.userId, auth.token.id), eq(projects.userId, systemUserId))
+        : eq(projects.userId, auth.token.id);
+
       const data = await db
         .select()
         .from(projects)
@@ -195,6 +217,7 @@ const app = new Hono()
           and(
             eq(projects.id, id),
             eq(projects.isTemplate, true),
+            ownerCondition,
           ),
         );
 

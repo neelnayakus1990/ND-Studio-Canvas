@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { TriangleAlert } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 import { useSignUp } from "@/features/auth/hooks/use-sign-up";
 
@@ -27,8 +28,15 @@ export const SignUpCard = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const params = useSearchParams();
+  const callbackUrlParam = params.get("callbackUrl");
+  const callbackUrl =
+    callbackUrlParam && callbackUrlParam.startsWith("/") && !callbackUrlParam.startsWith("//")
+      ? callbackUrlParam
+      : "/dashboard";
+
   const onProviderSignUp = (provider: "github" | "google") => {
-    signIn(provider, { callbackUrl: "/" });
+    signIn(provider, { callbackUrl });
   };
 
   const onCredentialSignUp = (
@@ -45,7 +53,7 @@ export const SignUpCard = () => {
         signIn("credentials", {
           email,
           password,
-          callbackUrl: "/",
+          callbackUrl,
         });
       },
     })

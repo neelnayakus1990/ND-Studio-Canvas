@@ -58,16 +58,16 @@ export const SidebarRoutes = () => {
       )}
       <ul className="flex flex-col gap-y-1 px-3">
         <SidebarItem
-          href="/"
+          href="/dashboard"
           icon={Home}
           label="Home"
-          isActive={pathname === "/"}
+          isActive={pathname === "/dashboard"}
         />
         <SidebarItem
-          href="/templates"
+          href="/dashboard/templates"
           icon={LayoutTemplate}
           label="Templates"
-          isActive={pathname === "/templates"}
+          isActive={pathname === "/dashboard/templates"}
         />
         <SidebarItem
           href="/brand-kit"

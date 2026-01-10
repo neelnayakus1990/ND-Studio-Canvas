@@ -26,6 +26,11 @@ export const SignInCard = () => {
 
   const params = useSearchParams();
   const error = params.get("error");
+  const callbackUrlParam = params.get("callbackUrl");
+  const callbackUrl =
+    callbackUrlParam && callbackUrlParam.startsWith("/") && !callbackUrlParam.startsWith("//")
+      ? callbackUrlParam
+      : "/dashboard";
 
   const onCredentialSignIn = (
     e: React.FormEvent<HTMLFormElement>
@@ -35,12 +40,12 @@ export const SignInCard = () => {
     signIn("credentials", {
       email: email,
       password: password,
-      callbackUrl: "/",
+      callbackUrl,
     });
   };
 
   const onProviderSignIn = (provider: "github" | "google") => {
-    signIn(provider, { callbackUrl: "/" });
+    signIn(provider, { callbackUrl });
   };
 
   return (

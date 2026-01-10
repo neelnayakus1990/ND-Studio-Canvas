@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { Hono } from "hono";
-import { and, desc, eq, ilike } from "drizzle-orm";
+import { and, desc, eq, ilike, or } from "drizzle-orm";
 import { verifyAuth } from "@hono/auth-js";
 import { zValidator } from "@hono/zod-validator";
 
 import { db } from "@/db/drizzle";
 import { assets } from "@/db/schema";
+import { getSystemUserId } from "@/lib/system-user";
 
 const app = new Hono()
   .get(
@@ -26,7 +27,15 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      const conditions = [eq(assets.userId, auth.token.id)];
+      const systemUserId = await getSystemUserId();
+      const baseOwnerCondition = systemUserId
+        ? or(
+            eq(assets.userId, auth.token.id),
+            and(eq(assets.userId, systemUserId), eq(assets.isBuiltin, true))
+          )
+        : eq(assets.userId, auth.token.id);
+
+      const conditions = [baseOwnerCondition];
 
       if (type) {
         conditions.push(eq(assets.type, type));

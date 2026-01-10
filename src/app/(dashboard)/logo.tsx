@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 export const Logo = () => {
   return (
-    <Link href="/">
+    <Link href="/dashboard">
       <div className="flex items-center gap-x-2 hover:opacity-75 transition h-[68px] px-4">
         <div className="size-8 relative">
           <Image src="/logo.svg" alt="Image AI" fill />
